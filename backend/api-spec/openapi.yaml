@@ -1,0 +1,1234 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: mpesa
+    description: M-Pesa payment operations
+  - name: otp
+    description: OTP verification operations
+  - name: qualification
+    description: Loan qualification operations
+  - name: files
+    description: File upload and download operations
+  - name: admin
+    description: Administrative operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/signup:
+    post:
+      operationId: signup
+      tags: [auth]
+      summary: Sign up a new user
+      description: Create a new user account with a role
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupRequest"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in a user
+      description: Authenticate with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+             schema:
+               $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                 $ref: "#/components/schemas/Error"
+  /auth/otp-login:
+    post:
+      operationId: otpLogin
+      tags: [auth]
+      summary: OTP login
+      description: Login using a one-time password sent to email or phone
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/OtpLoginEmailRequest"
+                - $ref: "#/components/schemas/OtpLoginPhoneRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                 $ref: "#/components/schemas/Error"
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get current user
+      description: Returns the authenticated user's profile
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /mpesa/stk:
+    post:
+      operationId: mpesaStk
+      tags: [mpesa]
+      summary: Initiate M-Pesa STK Push
+      description: Trigger a Lipa Na M-Pesa STK Push payment prompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MpesaStkRequest"
+      responses:
+        "201":
+          description: STK Push initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MpesaStkResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: M-Pesa request failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /mpesa/callback:
+    post:
+      operationId: mpesaCallback
+      tags: [mpesa]
+      summary: M-Pesa callback
+      description: Safaricom Daraja callback endpoint for STK Push results
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Callback accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ResultCode:
+                    type: integer
+                  ResultDesc:
+                    type: string
+  /mpesa/status:
+    get:
+      operationId: mpesaStatus
+      tags: [mpesa]
+      summary: Check M-Pesa payment status
+      description: Query the status of an STK Push payment by checkout request ID
+      parameters:
+        - name: checkoutRequestId
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The CheckoutRequestID returned from STK Push initiation
+      responses:
+        "200":
+          description: Payment status
+          content:
+            application/json:
+              schema:
+                 $ref: "#/components/schemas/MpesaPayment"
+        "404":
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /auth/profile:
+    put:
+      operationId: updateProfile
+      tags: [auth]
+      summary: Update user profile
+      description: Update the authenticated user's profile information
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdateRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /auth/account:
+    delete:
+      operationId: deleteAccount
+      tags: [auth]
+      summary: Delete user account
+      description: Permanently delete the authenticated user's account (requires password)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountRequest"
+      responses:
+        "200":
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                 $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/users:
+    post:
+      operationId: listUsers
+      tags: [admin]
+      summary: List all users (Manager only)
+      description: Get list of all users, optionally including suspended users
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                includeSuspended:
+                  type: boolean
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/User"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/users/suspend:
+    post:
+      operationId: suspendUser
+      tags: [admin]
+      summary: Suspend a user (Manager only)
+      description: Suspend a user account with a reason
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - reason
+              properties:
+                userId:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: User suspended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/users/unsuspend:
+    post:
+      operationId: unsuspendUser
+      tags: [admin]
+      summary: Unsuspend a user (Manager only)
+      description: Remove suspension from a user account
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+      responses:
+        "200":
+          description: User unsuspended
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/users/delete:
+    post:
+      operationId: deleteUser
+      tags: [admin]
+      summary: Delete a user (Manager only)
+      description: Permanently delete a user account
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+              properties:
+                userId:
+                  type: string
+      responses:
+        "200":
+          description: User deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /otp/send:
+    post:
+      operationId: sendOtp
+      tags: [otp]
+      summary: Send OTP
+      description: Send a one-time password to phone or email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpSendRequest"
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpResponse"
+        "429":
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /otp/verify:
+    post:
+      operationId: verifyOtp
+      tags: [otp]
+      summary: Verify OTP
+      description: Verify a one-time password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpVerifyRequest"
+      responses:
+        "200":
+          description: OTP verified
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+                  message:
+                    type: string
+        "400":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /otp/resend:
+    post:
+      operationId: resendOtp
+      tags: [otp]
+      summary: Resend OTP
+      description: Resend a one-time password (rate limited to 1 per 60 seconds)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OtpSendRequest"
+      responses:
+        "200":
+          description: OTP resent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OtpResponse"
+        "429":
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /qualification:
+    post:
+      operationId: submitQualification
+      tags: [qualification]
+      summary: Submit qualification answers
+      description: Submit pre-loan qualification questionnaire
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QualificationRequest"
+      responses:
+        "200":
+          description: Qualification evaluated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualificationResult"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      operationId: getQualification
+      tags: [qualification]
+      summary: Get qualification answers
+      description: Get the current user's qualification answers
+      security:
+        - BearerAuth: []
+      responses:
+        "200":
+          description: Qualification answers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QualificationAnswer"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /files/upload:
+    post:
+      operationId: uploadFile
+      tags: [files]
+      summary: Upload a file
+      description: Upload an image, document, or report to R2 storage
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - purpose
+              properties:
+                file:
+                  type: string
+                  format: binary
+                purpose:
+                  type: string
+                  enum: [idPhoto, profilePhoto, report, auditLog]
+      responses:
+        "201":
+          description: File uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FileUploadResponse"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /files/{key}:
+    get:
+      operationId: downloadFile
+      tags: [files]
+      summary: Download a file
+      description: Retrieve a file from R2 storage by its key
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: key
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: File content
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/reports/monthly:
+    get:
+      operationId: getMonthlyReports
+      tags: [admin]
+      summary: Get monthly financial reports
+      description: Retrieve monthly loan and transaction summaries (Manager/Supervisor only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: month
+          in: query
+          schema:
+            type: string
+            format: date-month
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Monthly report data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonthlyReport"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /admin/audit:
+    get:
+      operationId: getAuditLogs
+      tags: [admin]
+      summary: Get audit logs
+      description: Retrieve system audit trail (Manager/Supervisor only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        "200":
+          description: Audit log entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+        telephone:
+          type: string
+        idNumber:
+          type: string
+        pfNumber:
+          type: string
+        branch:
+          type: string
+        role:
+          type: string
+          enum: [User, Officer, Supervisor, Manager, Superadmin]
+        assignment:
+          type: string
+        createdAt:
+          type: string
+        isSuspended:
+          type: boolean
+        suspensionReason:
+          type: string
+          nullable: true
+        suspendedAt:
+          type: string
+          nullable: true
+      required:
+        - id
+        - email
+        - fullName
+        - telephone
+        - idNumber
+        - pfNumber
+        - branch
+        - role
+        - assignment
+        - createdAt
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+        fullName:
+          type: string
+        telephone:
+          type: string
+        idNumber:
+          type: string
+        pfNumber:
+          type: string
+        branch:
+          type: string
+        role:
+          type: string
+          enum: [User, Officer, Supervisor, Manager]
+        assignment:
+          type: string
+      required:
+        - email
+        - password
+        - fullName
+        - telephone
+        - idNumber
+        - pfNumber
+        - branch
+        - role
+        - assignment
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        phone:
+          type: string
+        password:
+          type: string
+      required:
+        - password
+      oneOf:
+        - required:
+            - email
+        - required:
+            - phone
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        token:
+          type: string
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    MpesaStkRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          description: Customer phone number (07... or 254...)
+        amount:
+          type: number
+          description: Payment amount in KES
+        reference:
+          type: string
+          description: Optional payment reference (e.g. loan number)
+        description:
+          type: string
+          description: Optional transaction description
+      required:
+        - phone
+        - amount
+    MpesaStkResponse:
+      type: object
+      properties:
+        MerchantRequestID:
+          type: string
+        CheckoutRequestID:
+          type: string
+        ResponseCode:
+          type: string
+        ResponseDescription:
+          type: string
+        CustomerMessage:
+          type: string
+        paymentId:
+          type: string
+          description: Internal payment record ID
+    MpesaPayment:
+      type: object
+      properties:
+        id:
+          type: string
+        checkoutRequestId:
+          type: string
+        merchantRequestId:
+          type: string
+        phone:
+          type: string
+        amount:
+          type: number
+        reference:
+          type: string
+        status:
+          type: string
+          enum: [pending, completed, failed]
+        receiptNumber:
+          type: string
+        resultDesc:
+          type: string
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - checkoutRequestId
+        - merchantRequestId
+        - phone
+        - amount
+        - status
+        - createdAt
+    ProfileUpdateRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+        telephone:
+          type: string
+        email:
+          type: string
+        branch:
+          type: string
+        assignment:
+          type: string
+      required:
+        - fullName
+        - telephone
+        - email
+    DeleteAccountRequest:
+      type: object
+      properties:
+        password:
+          type: string
+      required:
+        - password
+    OtpSendRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+          description: Phone number (07... or 254...)
+        email:
+          type: string
+          description: Email address
+        purpose:
+          type: string
+          enum: [login, signup, phone_verify, email_verify, reset]
+          description: OTP purpose
+      required:
+        - purpose
+    OtpVerifyRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        email:
+          type: string
+        code:
+          type: string
+          description: 6-digit OTP code
+        purpose:
+          type: string
+          enum: [login, signup, phone_verify, email_verify, reset]
+      required:
+        - code
+        - purpose
+    OtpResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        expiresIn:
+          type: integer
+        debugTarget:
+          type: string
+        debugCode:
+          type: string
+    QualificationRequest:
+      type: object
+      properties:
+        customerType:
+          type: string
+          enum: [Micro-Enterprise, Chama]
+        educationLevel:
+          type: string
+          enum: [Primary, Secondary, College, University, Post-Graduate]
+        employmentStatus:
+          type: string
+          enum: [Employed, Self-Employed, Business Owner, Unemployed]
+        monthlyIncome:
+          type: number
+        hasExistingLoans:
+          type: boolean
+        existingLoanDetails:
+          type: string
+        collateralAvailable:
+          type: boolean
+        businessType:
+          type: string
+          enum: [Retail, Agriculture, Services, Manufacturing, Other]
+        chamaName:
+          type: string
+        yearsInBusiness:
+          type: number
+      required:
+        - customerType
+        - educationLevel
+        - employmentStatus
+        - monthlyIncome
+        - collateralAvailable
+    QualificationResult:
+      type: object
+      properties:
+        qualifies:
+          type: boolean
+        reason:
+          type: string
+        recommendedLoanAmount:
+          type: number
+        message:
+          type: string
+    QualificationAnswer:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        customerType:
+          type: string
+        educationLevel:
+          type: string
+        employmentStatus:
+          type: string
+        monthlyIncome:
+          type: number
+        hasExistingLoans:
+          type: boolean
+        existingLoanDetails:
+          type: string
+        collateralAvailable:
+          type: boolean
+        businessType:
+          type: string
+        chamaName:
+          type: string
+        yearsInBusiness:
+          type: number
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+    OtpLoginEmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        code:
+          type: string
+          description: 6-digit OTP code
+      required:
+        - email
+        - code
+    OtpLoginPhoneRequest:
+      type: object
+      properties:
+        phone:
+          type: string
+        code:
+          type: string
+          description: 6-digit OTP code
+      required:
+        - phone
+        - code
+    Loan:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        customerId:
+          type: string
+        customerName:
+          type: string
+        loanType:
+          type: string
+          enum: [Starter, Top-up]
+        principal:
+          type: number
+        total:
+          type: number
+        weeklyInstallment:
+          type: number
+        duration:
+          type: integer
+        status:
+          type: string
+          enum: [pending, approved, declined, disbursed, closed, under_review]
+        appliedDate:
+          type: string
+        approvedDate:
+          type: string
+        disbursedDate:
+          type: string
+        declinedReason:
+          type: string
+        creditOfficer:
+          type: string
+        dueDate:
+          type: string
+        penaltyAmount:
+          type: number
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - customerId
+        - customerName
+        - loanType
+        - principal
+        - total
+        - weeklyInstallment
+        - duration
+        - status
+        - appliedDate
+        - creditOfficer
+        - createdAt
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        type:
+          type: string
+          enum: [loan, repayment, fee, penalty]
+        amount:
+          type: number
+        status:
+          type: string
+          enum: [pending, success, failed]
+        reference:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - userId
+        - type
+        - amount
+        - status
+        - reference
+        - createdAt
+    FileUploadResponse:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+        key:
+          type: string
+        purpose:
+          type: string
+        size:
+          type: integer
+      required:
+        - url
+        - key
+        - purpose
+        - size
+    MonthlyReport:
+      type: object
+      properties:
+        month:
+          type: string
+        totalLoans:
+          type: integer
+        totalDisbursed:
+          type: number
+        totalRepaid:
+          type: number
+        totalPenalties:
+          type: number
+        outstandingBalance:
+          type: number
+        loans:
+          type: array
+          items:
+            $ref: "#/components/schemas/Loan"
+        transactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+    AuditLogResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        actorId:
+          type: string
+        actorEmail:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+        details:
+          type: object
+        ipAddress:
+          type: string
+        createdAt:
+          type: string
+      required:
+        - id
+        - action
+        - actorId
+        - actorEmail
+        - resourceType
+        - resourceId
+        - details
+        - ipAddress
+        - createdAt
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: token

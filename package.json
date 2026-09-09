@@ -1,0 +1,14 @@
+{
+  "name": "vaultiline",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "install:app": "cd app && pnpm install",
+    "install:backend": "cd backend && pnpm install",
+    "install:all": "pnpm run install:app && pnpm run install:backend",
+    "typecheck": "pnpm -r --filter \"./app\" --filter \"./backend\" --if-present run typecheck"
+  },
+  "devDependencies": {
+    "prettier": "^3.9.5"
+  }
+}

@@ -1,0 +1,110 @@
+# compiled output
+dist
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+app/node_modules
+backend/node_modules
+node_modules
+
+# Expo
+.expo
+.expo-shared
+.expo-env.d.ts
+
+# Build outputs
+.expo
+dist
+build
+
+# IDEs and editors
+/.idea
+.kilo/
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Wrangler
+.wrangler
+backend/worker/.wrangler
+
+# Drizzle
+backend/db/.drizzle
+
+# macOS
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs
+logs
+*.log
+pnpm-debug.log*
+
+# Kilo configuration
+
+# Environment
+.env
+.env.local
+.env.*.local
+.dev.vars
+.dev.vars.*
+!backend/worker/.env.example
+
+# Databases & local data
+*.db
+*.sqlite
+*.sqlite3
+*.sql
+
+# Secrets / keys
+*.key
+*.pem
+*.p12
+*.pfx
+*.jks
+*.keystore
+*.mobileprovision
+service-account.json
+google-services.json
+GoogleService-Info.plist
+secrets.json
+
+# Testing
+coverage
+
+# Misc
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md

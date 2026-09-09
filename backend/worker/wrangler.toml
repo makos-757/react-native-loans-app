@@ -1,0 +1,41 @@
+name = "YOUR_WORKER_NAME"
+main = "src/index.ts"
+compatibility_date = "2025-07-17"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "YOUR_DATABASE_NAME"
+# Create your own D1 database: npx wrangler d1 create <your-database-name>
+# then paste the generated ID below.
+database_id = "YOUR_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "YOUR_BUCKET_NAME"
+# Create your own R2 bucket: npx wrangler r2 bucket create <your-bucket-name>
+# or use local R2 with `wrangler dev --local` (no remote bucket required).
+
+[vars]
+MPESA_ENV = "sandbox"
+MPESA_BASE_URL = "https://sandbox.safaricom.co.ke"
+MPESA_CONSUMER_KEY = "YOUR_DARAJA_CONSUMER_KEY"
+MPESA_SHORTCODE = "YOUR_SHORTCODE"
+MPESA_PASSKEY = "YOUR_PASSKEY"
+MPESA_PARTY_BF = "YOUR_SHORTCODE"
+MPESA_INITIATOR_NAME = "YOUR_INITIATOR_NAME"
+MPESA_QUEUE_TIMEOUT_URL = "https://sandbox.safaricom.co.ke/mpesa/queue"
+MPESA_RESULT_URL = "https://sandbox.safaricom.co.ke/mpesa/result"
+MPESA_CALLBACK_URL = "YOUR_WORKER_URL/api/mpesa/callback"
+MPESA_ACCOUNT_REFERENCE = "VAULTILINE"
+AFRICASTALKING_USERNAME = "sandbox"
+AFRICASTALKING_API_KEY = "YOUR_API_KEY"
+AT_SENDER_ID = "VAULTILINE"
+EMAIL_FROM = "noreply@example.com"
+MPESA_CALLBACK_TOKEN = "YOUR_CALLBACK_TOKEN"
+ENABLE_TEST_SEED = "false"
+
+[observability]
+enabled = true
+
+[triggers]
+crons = ["0 * * * *", "0 0 * * *"]
