@@ -2,10 +2,7 @@
 
 **A React Native / Expo + Cloudflare Worker learning & integration project for loan-management workflows.**
 
-This repository is an **educational reference implementation**. It was previously connected
-to live infrastructure (a Cloudflare Worker backed by D1 + R2, with M-Pesa, Africa's
-Talking, Brevo, and EAS builds). That production deployment has been **decommissioned** and
-is **no longer live**.
+This repository is an **educational reference implementation**.
 
 The source code — UI, architecture, database schema, API routes, business logic, offline
 first design, and integration patterns — is preserved so developers can study or fork it
@@ -65,8 +62,8 @@ Requires external credentials/services — see
 ## Project structure
 
 ```
-loans-react-application/
-├── app/                       # Expo React Native app
+react-native-loans-app/
+├── app/                        # Expo React Native app
 │   ├── api-client/            # Orval-generated typed API client
 │   ├── screens/               # expo-router screens + (tabs) layout
 │   ├── components/            # shared UI (Header, KPICard, NetworkGate, ...)
@@ -262,7 +259,7 @@ credentials.
 ```text
 Demo (synthetic, local only):
   Email:    demo@example.com
-  Password: Demo@1234
+  Password: ChangeMeNow!123
   Role:     Manager
 ```
 
